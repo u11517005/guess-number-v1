@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幾 A 幾 B｜版本一</title>
+  <style>
+    :root {
+      --bg: #f4f7f2;
+      --card: #ffffff;
+      --ink: #26352d;
+      --muted: #718078;
+      --green: #557b63;
+      --green-dark: #3e624c;
+      --line: #e2e9e2;
+      --soft: #edf4ed;
+      --gold: #f4ead0;
+      --red: #b64b4b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 28px 16px;
+      background: radial-gradient(circle at top, #ffffff 0, var(--bg) 58%);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    }
+    .wrap { width: min(680px, 100%); margin: 0 auto; }
+    header { text-align: center; margin: 12px 0 24px; }
+    .eyebrow { color: var(--green); font-size: 13px; letter-spacing: 2px; font-weight: 700; }
+    h1 { margin: 8px 0; font-size: clamp(28px, 6vw, 40px); }
+    .subtitle { color: var(--muted); margin: 0; line-height: 1.7; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: clamp(18px, 4vw, 28px);
+      box-shadow: 0 12px 32px rgba(48, 75, 56, .07);
+      margin-bottom: 16px;
+    }
+    .rule {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0 4px;
+    }
+    .rule div { background: var(--soft); border-radius: 13px; padding: 12px; }
+    .rule strong { display: block; color: var(--green-dark); font-size: 20px; margin-bottom: 3px; }
+    .rule span { color: var(--muted); font-size: 13px; }
+    label { display: block; font-weight: 700; margin-bottom: 9px; }
+    .input-row { display: flex; gap: 10px; }
+    input[type="text"] {
+      width: 100%; min-width: 0; padding: 14px 16px;
+      border: 1.5px solid var(--line); border-radius: 12px;
+      font-size: 23px; letter-spacing: 8px; text-align: center;
+      color: var(--ink); outline: none; background: #fcfdfb;
+    }
+    input[type="text"]:focus { border-color: var(--green); box-shadow: 0 0 0 3px #557b631a; }
+    button {
+      border: 0; border-radius: 12px; padding: 13px 18px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: transform .12s, background .12s;
+    }
+    button:active { transform: scale(.98); }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .primary { background: var(--green); color: white; white-space: nowrap; }
+    .primary:hover:not(:disabled) { background: var(--green-dark); }
+    .secondary { background: var(--soft); color: var(--green-dark); }
+    .message { min-height: 26px; margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+    .message.error { color: var(--red); }
+    .message.success { color: var(--green-dark); font-weight: 700; }
+    .status-line { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; }
+    .status { font-size: 14px; color: var(--muted); }
+    .debug-box {
+      display: none; margin-top: 14px; padding: 12px 14px;
+      background: var(--gold); border-radius: 12px; color: #69562b;
+      font-size: 14px;
+    }
+    .debug-box.visible { display: block; }
+    .debug-answer { font-weight: 800; font-size: 20px; letter-spacing: 5px; margin-left: 8px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .history-empty { color: var(--muted); text-align: center; padding: 20px 0 6px; font-size: 14px; }
+    .result-list { display: grid; gap: 8px; }
+    .result-row {
+      display: grid; grid-template-columns: 48px 1fr auto; gap: 12px;
+      align-items: center; padding: 11px 13px; background: #f8faf7;
+      border: 1px solid var(--line); border-radius: 12px;
+    }
+    .turn { color: var(--muted); font-size: 13px; }
+    .guess { font-weight: 800; font-size: 19px; letter-spacing: 4px; }
+    .score { color: var(--green-dark); font-weight: 800; }
+    .footer-note { text-align: center; color: var(--muted); font-size: 12px; line-height: 1.7; padding: 8px 12px; }
+    @media (max-width: 460px) {
+      .input-row { flex-direction: column; }
+      .input-row button { width: 100%; }
+      .status-line { align-items: flex-start; flex-direction: column; }
+      .rule { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">NUMBER GUESSING GAME</div>
+      <h1>幾 A 幾 B</h1>
+      <p class="subtitle">猜出由 0～9 組成的四位數字，挑戰看看你幾次能猜中！</p>
+    </header>
+
+    <section class="card">
+      <h2 style="margin:0 0 8px;font-size:19px;">遊戲規則</h2>
+      <p style="margin:0;color:var(--muted);line-height:1.7;">系統會產生四個不重複的數字，答案可能以 0 開頭。輸入四位數後，系統會告訴你幾 A 幾 B。</p>
+      <div class="rule">
+        <div><strong>A</strong><span>數字正確，而且位置正確</span></div>
+        <div><strong>B</strong><span>數字正確，但是位置不同</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="status-line">
+        <strong id="gameStatus">遊戲進行中</strong>
+        <span class="status" id="guessCount">有效猜測：0 次</span>
+      </div>
+
+      <label for="guessInput">請輸入四位數（不可重複）</label>
+      <div class="input-row">
+        <input id="guessInput" type="text" inputmode="numeric" maxlength="4"
+               autocomplete="off" placeholder="例如 1234" aria-label="輸入四位數字">
+        <button class="primary" id="submitBtn">送出猜測</button>
+      </div>
+      <p class="message" id="message" role="status" aria-live="polite">準備好了嗎？輸入你的第一組答案吧！</p>
+
+      <div class="debug-box" id="debugBox">
+        目前這一局的正確答案：<span class="debug-answer" id="debugAnswer">----</span>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="debugBtn" aria-pressed="false">開啟除錯模式</button>
+        <button class="secondary" id="restartBtn">重新開始</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin:0 0 14px;font-size:19px;">本局猜測結果</h2>
+      <div id="resultList" class="history-empty">目前還沒有猜測紀錄。</div>
+    </section>
+
+    <p class="footer-note">版本一｜基本遊戲與除錯模式<br>重新整理網頁會開始一局全新的遊戲；本版本不保存歷史紀錄。</p>
+  </main>
+
+  <script>
+    // 產生四個不重複的數字，使用字串保留可能出現的開頭 0。
+    function createAnswer() {
+      const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+      for (let i = digits.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [digits[i], digits[j]] = [digits[j], digits[i]];
+      }
+      return digits.slice(0, 4).join("");
+    }
+
+    let answer = createAnswer();
+    let guessNumber = 0;
+    let isFinished = false;
+    let debugMode = false;
+
+    const guessInput = document.getElementById("guessInput");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
+    const resultList = document.getElementById("resultList");
+    const guessCount = document.getElementById("guessCount");
+    const gameStatus = document.getElementById("gameStatus");
+    const debugBtn = document.getElementById("debugBtn");
+    const debugBox = document.getElementById("debugBox");
+    const debugAnswer = document.getElementById("debugAnswer");
+
+    function showMessage(text, type = "") {
+      message.textContent = text;
+      message.className = "message" + (type ? " " + type : "");
+    }
+
+    function updateDebugDisplay() {
+      debugBox.classList.toggle("visible", debugMode);
+      debugAnswer.textContent = debugMode ? answer : "----";
+      debugBtn.textContent = debugMode ? "關閉除錯模式" : "開啟除錯模式";
+      debugBtn.setAttribute("aria-pressed", String(debugMode));
+    }
+
+    function updateGameStatus() {
+      guessCount.textContent = `有效猜測：${guessNumber} 次`;
+      gameStatus.textContent = isFinished ? "本局已完成 🎉" : "遊戲進行中";
+      submitBtn.disabled = isFinished;
+      guessInput.disabled = isFinished;
+    }
+
+    function validateGuess(value) {
+      if (value.trim() === "") return "請先輸入四位數字。";
+      if (!/^\d{4}$/.test(value)) return "格式錯誤！請輸入剛好四個數字。";
+      if (new Set(value).size !== 4) return "數字不可重複，請重新輸入。";
+      return "";
+    }
+
+    function calculateAB(guess) {
+      let a = 0;
+      let b = 0;
+      for (let i = 0; i < 4; i++) {
+        if (guess[i] === answer[i]) {
+          a++;
+        } else if (answer.includes(guess[i])) {
+          b++;
+        }
+      }
+      return { a, b };
+    }
+
+    function addResult(guess, a, b) {
+      if (guessNumber === 1) {
+        resultList.className = "result-list";
+        resultList.textContent = "";
+      }
+      const row = document.createElement("div");
+      row.className = "result-row";
+
+      const turn = document.createElement("span");
+      turn.className = "turn";
+      turn.textContent = `第 ${guessNumber} 次`;
+
+      const number = document.createElement("span");
+      number.className = "guess";
+      number.textContent = guess;
+
+      const score = document.createElement("span");
+      score.className = "score";
+      score.textContent = `${a}A${b}B`;
+
+      row.append(turn, number, score);
+      resultList.appendChild(row);
+    }
+
+    function submitGuess() {
+      if (isFinished) return;
+
+      const guess = guessInput.value;
+      const error = validateGuess(guess);
+      if (error) {
+        showMessage(error, "error");
+        guessInput.focus();
+        return;
+      }
+
+      const { a, b } = calculateAB(guess);
+      guessNumber++;
+      addResult(guess, a, b);
+      updateGameStatus();
+
+      if (a === 4) {
+        isFinished = true;
+        showMessage(`恭喜你猜對了！正確答案是 ${answer}，總共猜了 ${guessNumber} 次。`, "success");
+        updateGameStatus();
+      } else {
+        showMessage(`這次的結果是 ${a}A${b}B，再試一次！`);
+      }
+
+      guessInput.value = "";
+      if (!isFinished) guessInput.focus();
+    }
+
+    function restartGame() {
+      answer = createAnswer();
+      guessNumber = 0;
+      isFinished = false;
+      debugMode = false;
+      guessInput.value = "";
+      resultList.className = "history-empty";
+      resultList.textContent = "目前還沒有猜測紀錄。";
+      showMessage("新的一局開始了！輸入你的第一組答案吧！");
+      updateDebugDisplay();
+      updateGameStatus();
+      guessInput.focus();
+    }
+
+    submitBtn.addEventListener("click", submitGuess);
+    guessInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") submitGuess();
+    });
+    debugBtn.addEventListener("click", () => {
+      // 切換除錯顯示，不更換答案、不清空紀錄、不增加猜測次數。
+      debugMode = !debugMode;
+      updateDebugDisplay();
+    });
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
+
+    updateDebugDisplay();
+    updateGameStatus();
+  </script>
+</body>
+</html>
